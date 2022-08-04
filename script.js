@@ -106,65 +106,90 @@ for (let i = 0; i < accordition.length; i++) {
 
 // form
 
-document
-  .getElementById("registration")
-  .addEventListener("submit", function (event) {
-    event.preventDefault();
+const form = document.getElementById("form");
+const username = document.getElementById("username");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const password2 = document.getElementById("password2");
 
-    let errors = {};
-    let form = event.target;
-
-    let username = document.getElementById("username").value;
-
-    if (username == " ") {
-      errors.username = "Username can not be empty";
-    }
-
-    let checkbox = document.getElementById("agreecheckbox").checked;
-
-    if (!checkbox) {
-      errors.agree = "You must agree our terms and conditions";
-    }
-
-    let age = false;
-
-    form.querySelectorAll('[name = "age"]').forEach((item) => {
-      if (item.checked) {
-        age = true;
-      }
-    });
-
-    if (!age) {
-      errors.age = "Please select your Age";
-    }
-
-    console.log(errors);
-
-    form.querySelectorAll(".error-text").forEach((item) => {
-      item.textContent = "";
-    });
-
-    for (let item in errors) {
-      let errorPlaceholder = document.getElementById("error_" + item);
-
-      if (errorPlaceholder) {
-        errorPlaceholder.textContent = errors[item];
-      }
-    }
-
-    if (Object.keys(errors).length == 0) {
-      form.submit();
-    }
-  });
-
-let counter = localStorage.getItem("counter");
-
-let newValue;
-
-if (!counter) {
-  newValue = 1;
-} else {
-  newValue = parseInt(counter) + 1;
+function showError(input, message) {
+  const formControl = input.parentElement;
+  formControl.className = "form-control error";
+  const small = formControl.querySelector("small");
+  small.innerText = message;
 }
 
-localStorage.setItem("counter", newValue);
+function showSuccess(input) {
+  const formControl = input.parentElement;
+  formControl.className = "form-control success";
+}
+
+function checkEmail(input) {
+  const re =
+    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  if (re.test(input.value.trim())) {
+    showSuccess(input);
+  } else {
+    showError(input, "Email is not valid");
+  }
+}
+
+function checkRequired(inputArr) {
+  inputArr.forEach(function (input) {
+    if (input.value.trim() === "") {
+      showError(input, `${getFieldName(input)} is required`);
+    } else {
+      showSuccess(input);
+    }
+  });
+}
+
+function checkLength(input, min, max) {
+  if (input.value.length < min) {
+    showError(
+      input,
+      `${getFieldName(input)} must be at least ${min} characters`
+    );
+  } else if (input.value.length > max) {
+    showError(
+      input,
+      `${getFieldName(input)} must be less than ${max} characters`
+    );
+  } else {
+    showSuccess(input);
+  }
+}
+
+function checkPasswordsMatch(input1, input2) {
+  if (input1.value !== input2.value) {
+    showError(input2, "Passwords do not match");
+  }
+}
+
+function getFieldName(input) {
+  return input.id.charAt(0).toUpperCase() + input.id.slice(1);
+}
+
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  checkRequired([username, email, password, password2]);
+  checkLength(username, 3, 15);
+  checkLength(password, 6, 25);
+  checkEmail(email);
+  checkPasswordsMatch(password, password2);
+});
+
+// localstorage & sessionstorage
+let counterUser = sessionStorage.getItem("counter");
+let newValue;
+
+if (!counterUser) {
+  newValue = 1;
+} else {
+  newValue = parseInt(counterUser) + 1;
+}
+
+sessionStorage.setItem("counter", newValue);
+document.getElementById("counter").textContent =
+  sessionStorage.getItem("counter");
